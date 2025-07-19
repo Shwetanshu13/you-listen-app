@@ -19,7 +19,7 @@ export default function ProfileCard() {
       );
       clearAppUser();
       Toast.show({ type: "success", text1: "Logged out successfully" });
-      router.replace("/");
+      router.replace("/index");
     } catch {
       Toast.show({ type: "error", text1: "Logout failed" });
     }

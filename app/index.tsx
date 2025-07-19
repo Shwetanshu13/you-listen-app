@@ -6,21 +6,24 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LandingPage() {
   return (
-    <SafeAreaView className="flex-1 items-center justify-center bg-black px-6 m-6">
+    <SafeAreaView className="flex-1 items-center justify-center bg-black px-6">
       <View>
-        <Text className="text-white text-4xl font-bold text-center">
-          Welcome to You Listen
+        <Text className="text-white text-4xl font-semibold text-center">
+          Welcome to
         </Text>
-        <Text className="text-white text-lg mt-2 text-center">
+        <Text className="text-white text-4xl font-extrabold text-center">
+          You Listen
+        </Text>
+        <Text className="text-white text-lg my-2 text-center">
           Private music streaming for your circle only.
         </Text>
-        <Link href="/login" asChild>
-          <TouchableOpacity>
-            <Text className="mt-6 text-pink-500 text-lg font-semibold">
+        <TouchableOpacity className="mt-6 bg-pink-500 px-4 py-2 rounded-full">
+          <Link href="/login" asChild>
+            <Text className="text-white text-center text-lg font-semibold my-3">
               Get Started
             </Text>
-          </TouchableOpacity>
-        </Link>
+          </Link>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
