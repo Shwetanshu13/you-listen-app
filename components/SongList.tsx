@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
-import { trpc } from "@/utils/trpc";
 import { useDebounce } from "@/hooks/useDebounce";
 import SongCard from "./SongCard";
+import axiosInstance from "@/utils/axios";
 
 interface Song {
   id: number;
@@ -14,20 +14,30 @@ interface Song {
 export default function SongList() {
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 300);
+  const [allSongs, setAllSongs] = useState<Song[]>([]);
+  const [displayedSongs, setDisplayedSongs] = useState<Song[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
 
-  const { refetch: refetchSearch, isFetching } =
-    trpc.songs.searchSongs.useQuery(
-      { query: debouncedQuery },
-      { enabled: false }
-    );
+  useEffect(() => {
+    const fetchAllSongs = async () => {
+      try {
+        const res = await axiosInstance.get("/songs/all");
+        setAllSongs(res.data);
+        setDisplayedSongs(res.data);
+      } catch (error) {
+        console.error("Error fetching songs:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const { data: allSongs, isLoading } = trpc.songs.getAll.useQuery();
-
-  const [displayedSongs, setDisplayedSongs] = useState<typeof allSongs>([]);
+    fetchAllSongs();
+  }, []);
 
   useEffect(() => {
     if (!debouncedQuery.trim()) {
-      setDisplayedSongs(allSongs || []);
+      setDisplayedSongs(allSongs);
     } else {
       handleSearch();
     }
@@ -35,10 +45,20 @@ export default function SongList() {
 
   const handleSearch = async () => {
     if (!debouncedQuery.trim()) {
-      setDisplayedSongs(allSongs || []);
-    } else {
-      const result = await refetchSearch();
-      setDisplayedSongs(result.data || []);
+      setDisplayedSongs(allSongs);
+      return;
+    }
+
+    setIsFetching(true);
+    try {
+      const res = await axiosInstance.get("/songs/search", {
+        params: { query: debouncedQuery },
+      });
+      setDisplayedSongs(res.data || []);
+    } catch (error) {
+      console.error("Search error:", error);
+    } finally {
+      setIsFetching(false);
     }
   };
 
@@ -63,11 +83,11 @@ export default function SongList() {
       {(isLoading || isFetching) && (
         <Text className="text-gray-400">Loading...</Text>
       )}
-      {displayedSongs?.length === 0 && !isFetching && (
+      {displayedSongs.length === 0 && !isFetching && (
         <Text className="text-gray-500">No songs found.</Text>
       )}
 
-      {displayedSongs?.map((song: Song) => (
+      {displayedSongs.map((song: Song) => (
         <SongCard
           key={song.id}
           id={song.id}

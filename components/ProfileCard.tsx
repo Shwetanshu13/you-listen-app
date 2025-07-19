@@ -4,7 +4,6 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import axios from "axios";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
-import { trpc } from "@/utils/trpc"; // Adapt this to your mobile setup
 import useAuthStore from "@/stores/useAuthStore";
 
 export default function ProfileCard() {
