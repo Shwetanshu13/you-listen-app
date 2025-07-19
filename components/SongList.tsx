@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
 import { trpc } from "@/utils/trpc";
-import { SongCard } from "@/components";
 import { useDebounce } from "@/hooks/useDebounce";
+import SongCard from "./SongCard";
 
 interface Song {
   id: number;
