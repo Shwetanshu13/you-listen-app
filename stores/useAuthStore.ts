@@ -5,20 +5,21 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export type User = {
   id: number;
   username: string;
+  role: string;
 };
 
 type AuthState = {
-  user: User | null;
-  setUser: (user: User) => void;
-  clearUser: () => void;
+  appUser: User | null;
+  setAppUser: (user: User) => void;
+  clearAppUser: () => void;
 };
 
 const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      user: null,
-      setUser: (user) => set({ user }),
-      clearUser: () => set({ user: null }),
+      appUser: null,
+      setAppUser: (user) => set({ appUser: user }),
+      clearAppUser: () => set({ appUser: null }),
     }),
     {
       name: "auth-storage", // key in storage
