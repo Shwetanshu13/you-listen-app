@@ -4,8 +4,9 @@ import { Stack } from "expo-router";
 import "./global.css";
 import useAuthStore from "@/stores/useAuthStore";
 import { trpc } from "@/utils/trpc";
+import { Providers } from "@/components";
 
-const RootLayout = () => {
+export default function RootLayout() {
   const { appUser, setAppUser } = useAuthStore();
 
   const { data: user, isLoading } = trpc.auth.me.useQuery(undefined, {
@@ -21,17 +22,17 @@ const RootLayout = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <Stack>
-        <Stack.Protected guard={!!appUser}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack.Protected>
-        <Stack.Protected guard={!appUser}>
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen name="register" options={{ headerShown: false }} />
-        </Stack.Protected>
-      </Stack>
+      <Providers>
+        <Stack>
+          <Stack.Protected guard={!!appUser}>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          </Stack.Protected>
+          <Stack.Protected guard={!appUser}>
+            <Stack.Screen name="login" options={{ headerShown: false }} />
+            <Stack.Screen name="register" options={{ headerShown: false }} />
+          </Stack.Protected>
+        </Stack>
+      </Providers>
     </SafeAreaView>
   );
-};
-
-export default RootLayout;
+}
