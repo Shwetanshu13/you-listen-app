@@ -1,22 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import { View, Text, Pressable, AppState, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Slider from "@react-native-community/slider";
 import { Audio, AVPlaybackStatus } from "expo-av";
-import { Pause, Play, Volume2 } from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Pause, Play } from "lucide-react-native";
 import { useAudioStore } from "@/stores/useAudioStore";
+import { useRouter } from "expo-router";
+import Animated, { FadeInUp, SlideInDown } from "react-native-reanimated";
 
 export default function AudioPlayer() {
-  const { currentSong, isPlaying, setIsPlaying } = useAudioStore();
+  const {
+    currentSong,
+    isPlaying,
+    setIsPlaying,
+    setCurrentTime,
+    setDuration,
+    setProgress,
+    currentTime,
+    duration,
+    progress,
+  } = useAudioStore();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const soundRef = useRef<Audio.Sound | null>(null);
-
-  const [progress, setProgress] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isBuffering, setIsBuffering] = useState(false);
 
   // Configure audio for background playback
   useEffect(() => {
@@ -57,9 +63,6 @@ export default function AudioPlayer() {
     if (!currentSong) return;
 
     const loadAndPlay = async () => {
-      setIsLoading(true);
-      setIsBuffering(true);
-
       try {
         // Unload previous sound
         if (soundRef.current) {
@@ -71,7 +74,7 @@ export default function AudioPlayer() {
           { uri: currentSong.fileUrl },
           {
             shouldPlay: false,
-            volume: volume,
+            volume: 1,
             rate: 1.0,
             shouldCorrectPitch: true,
             progressUpdateIntervalMillis: 500,
@@ -83,24 +86,24 @@ export default function AudioPlayer() {
 
         // Set up playback status listener
         sound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
-          if (!status.isLoaded) {
-            setIsBuffering(true);
-            return;
-          }
+          if (!status.isLoaded) return;
 
-          setIsBuffering(status.isBuffering || false);
-          setCurrentTime(status.positionMillis / 1000);
-          setDuration(status.durationMillis ? status.durationMillis / 1000 : 0);
-          setProgress(
-            status.durationMillis
-              ? (status.positionMillis / status.durationMillis) * 100
-              : 0
-          );
+          const currentTimeSeconds = status.positionMillis / 1000;
+          const durationSeconds = status.durationMillis
+            ? status.durationMillis / 1000
+            : 0;
+          const progressPercent = status.durationMillis
+            ? (status.positionMillis / status.durationMillis) * 100
+            : 0;
+
+          setCurrentTime(currentTimeSeconds);
+          setDuration(durationSeconds);
+          setProgress(progressPercent);
+          setProgress(progressPercent);
 
           // Auto-play next song when current ends
           if (status.didJustFinish) {
             setIsPlaying(false);
-            // You can implement auto-next functionality here
           }
         });
 
@@ -110,9 +113,6 @@ export default function AudioPlayer() {
       } catch (error) {
         console.error("Failed to load audio:", error);
         Alert.alert("Error", "Failed to load audio. Please try again.");
-      } finally {
-        setIsLoading(false);
-        setIsBuffering(false);
       }
     };
 
@@ -142,13 +142,6 @@ export default function AudioPlayer() {
     updatePlayback();
   }, [isPlaying]);
 
-  // Handle volume changes
-  useEffect(() => {
-    if (soundRef.current) {
-      soundRef.current.setVolumeAsync(volume);
-    }
-  }, [volume]);
-
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60)
@@ -157,93 +150,80 @@ export default function AudioPlayer() {
     return `${minutes}:${seconds}`;
   };
 
-  const handleSeek = async (value: number) => {
-    if (!soundRef.current || !duration) return;
-    try {
-      const positionMillis = (value / 100) * duration * 1000;
-      await soundRef.current.setPositionAsync(positionMillis);
-    } catch (error) {
-      console.error("Seek error:", error);
-    }
-  };
-
   if (!currentSong) return null;
 
   return (
-    <View
-      className="absolute left-0 right-0 bg-neutral-900 p-4 space-y-4 border-t border-neutral-700"
+    <Animated.View
+      entering={SlideInDown.duration(500)}
+      className="absolute left-0 right-0"
       style={{
-        bottom: 83, // Position above tab bar (typical tab bar height is ~83px)
+        bottom: 64, // Position above tab bar
         paddingBottom: Math.max(insets.bottom, 8),
       }}
     >
-      {/* Song Info */}
-      <View className="flex-row justify-between items-start">
-        <View className="flex-1">
-          <Text className="text-white font-semibold text-lg truncate">
-            {currentSong.title}
-          </Text>
-          <Text className="text-gray-400 text-sm truncate">
-            {currentSong.artist}
-          </Text>
-          {(isLoading || isBuffering) && (
-            <Text className="text-yellow-400 text-xs">
-              {isLoading ? "Loading..." : "Buffering..."}
-            </Text>
-          )}
-        </View>
-      </View>
-
-      {/* Controls */}
-      <View className="flex-row items-center justify-between">
-        {/* Play/Pause */}
+      <LinearGradient
+        colors={["rgba(236, 72, 153, 0.95)", "rgba(139, 92, 246, 0.95)"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        className="mx-0 rounded-2xl p-4 shadow-2xl backdrop-blur-xl roundted-t-2xl"
+      >
+        {/* Progress Bar */}
+        <View className="absolute top-0 left-0 right-0 h-1 bg-white/20 rounded-t-2xl">
+          <View
+            className="h-full bg-white rounded-t-2xl"
+            style={{ width: `${progress}%` }}
+          />
+        </View>{" "}
         <Pressable
-          onPress={() => setIsPlaying(!isPlaying)}
-          className="bg-neutral-700 p-3 rounded-full"
-          disabled={isLoading}
+          onPress={() => router.push("/audio-page")}
+          className="flex-row items-center space-x-4"
         >
-          {isPlaying ? (
-            <Pause size={24} color="white" />
-          ) : (
-            <Play size={24} color="white" />
-          )}
-        </Pressable>
+          {/* Album Art */}
+          <Animated.View
+            entering={FadeInUp.delay(200)}
+            className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-xl items-center justify-center overflow-hidden"
+          >
+            <Text className="text-2xl">🎵</Text>
+          </Animated.View>
 
-        {/* Time + Progress Bar */}
-        <View className="flex-1 mx-4">
-          <View className="flex-row justify-between mb-1">
-            <Text className="text-xs text-white">
-              {formatTime(currentTime)}
+          {/* Song Info */}
+          <Animated.View entering={FadeInUp.delay(300)} className="flex-1">
+            <Text className="text-white font-bold text-base truncate">
+              {currentSong.title}
             </Text>
-            <Text className="text-xs text-white">{formatTime(duration)}</Text>
-          </View>
-          <Slider
-            value={progress}
-            onValueChange={handleSeek}
-            minimumValue={0}
-            maximumValue={100}
-            minimumTrackTintColor="#ec4899"
-            maximumTrackTintColor="#aaa"
-            thumbTintColor="#ec4899"
-            disabled={isLoading}
-          />
-        </View>
+            <Text className="text-white/80 text-sm truncate">
+              {currentSong.artist}
+            </Text>
+          </Animated.View>
 
-        {/* Volume */}
-        <View className="flex-row items-center gap-2 w-24 ml-2">
-          <Volume2 size={18} color="white" />
-          <Slider
-            value={volume}
-            onValueChange={setVolume}
-            minimumValue={0}
-            maximumValue={1}
-            step={0.01}
-            style={{ width: 80 }}
-            minimumTrackTintColor="#ec4899"
-            thumbTintColor="#ec4899"
-          />
-        </View>
-      </View>
-    </View>
+          {/* Time Display */}
+          <Animated.View
+            entering={FadeInUp.delay(400)}
+            className="items-end mx-4"
+          >
+            <Text className="text-white/60 text-xs">
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </Text>
+          </Animated.View>
+
+          {/* Play/Pause Button */}
+          <Animated.View entering={FadeInUp.delay(500)}>
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                setIsPlaying(!isPlaying);
+              }}
+              className="w-12 h-12 rounded-full bg-white/25 backdrop-blur-xl items-center justify-center shadow-lg"
+            >
+              {isPlaying ? (
+                <Pause size={20} color="white" />
+              ) : (
+                <Play size={20} color="white" style={{ marginLeft: 2 }} />
+              )}
+            </Pressable>
+          </Animated.View>
+        </Pressable>
+      </LinearGradient>
+    </Animated.View>
   );
 }

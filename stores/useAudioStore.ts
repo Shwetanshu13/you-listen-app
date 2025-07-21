@@ -10,6 +10,9 @@ export const useAudioStore = create<{
     fileUrl: string;
   } | null;
   isPlaying: boolean;
+  currentTime: number;
+  duration: number;
+  progress: number;
   setCurrentSong: (song: {
     id: number;
     title: string;
@@ -18,9 +21,18 @@ export const useAudioStore = create<{
     fileUrl: string;
   }) => void;
   setIsPlaying: (playing: boolean) => void;
+  setCurrentTime: (time: number) => void;
+  setDuration: (duration: number) => void;
+  setProgress: (progress: number) => void;
 }>((set) => ({
   currentSong: null,
   isPlaying: false,
+  currentTime: 0,
+  duration: 0,
+  progress: 0,
   setCurrentSong: (song) => set({ currentSong: song, isPlaying: true }),
   setIsPlaying: (playing) => set({ isPlaying: playing }),
+  setCurrentTime: (time) => set({ currentTime: time }),
+  setDuration: (duration) => set({ duration: duration }),
+  setProgress: (progress) => set({ progress: progress }),
 }));

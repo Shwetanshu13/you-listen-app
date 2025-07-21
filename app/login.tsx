@@ -4,6 +4,7 @@ import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import useAuthStore from "@/stores/useAuthStore";
+import axiosInstance from "@/utils/axios";
 
 const LoginPage = () => {
   const router = useRouter();
@@ -19,11 +20,12 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const res = await axios.post(
+      const res = await axiosInstance.post(
         `${process.env.EXPO_PUBLIC_BACKEND_URL}/auth/login`,
         { username, password },
         { withCredentials: true }
       );
+      console.log(res.data);
 
       const user = res.data;
       if (!user) {
@@ -37,6 +39,7 @@ const LoginPage = () => {
       });
       router.replace("/"); // Replace login screen
     } catch (err: any) {
+      console.error("Login error:", err);
       setError(err.message || "An unknown error occurred");
     } finally {
       setIsLoading(false);

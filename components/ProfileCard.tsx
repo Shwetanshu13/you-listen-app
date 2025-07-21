@@ -11,15 +11,18 @@ export default function ProfileCard() {
   const { appUser, clearAppUser } = useAuthStore();
 
   const handleLogout = async () => {
+    console.log("Logging out...");
     try {
-      await axios.post(
+      const res = await axios.post(
         `${process.env.EXPO_PUBLIC_BACKEND_URL}/auth/logout`,
         {},
         { withCredentials: true }
       );
+      console.log(res.data);
       clearAppUser();
+      console.log("Logged out successfully");
       Toast.show({ type: "success", text1: "Logged out successfully" });
-      router.replace("/index");
+      router.replace("/");
     } catch {
       Toast.show({ type: "error", text1: "Logout failed" });
     }

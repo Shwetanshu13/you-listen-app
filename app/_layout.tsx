@@ -13,6 +13,11 @@ export default function RootLayout() {
     const fetchUser = async () => {
       try {
         const response = await axiosInstance.get("/auth/me");
+        console.log(response.data);
+        if (response.status !== 200) {
+          console.log("User not authenticated");
+          return;
+        }
         const user = response.data;
         setAppUser({
           id: user.id,
@@ -36,6 +41,15 @@ export default function RootLayout() {
       <Stack>
         <Stack.Protected guard={!!appUser}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="audio-page"
+            options={{
+              headerShown: false,
+              presentation: "modal",
+              gestureEnabled: true,
+              gestureDirection: "vertical",
+            }}
+          />
         </Stack.Protected>
         <Stack.Protected guard={!appUser}>
           <Stack.Screen name="index" options={{ headerShown: false }} />

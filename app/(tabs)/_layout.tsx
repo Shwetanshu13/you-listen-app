@@ -4,11 +4,8 @@ import { Tabs } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Home, User, Library, Settings } from "lucide-react-native";
 import { AudioPlayerWrapper } from "@/components";
-import { useAudioStore } from "@/stores/useAudioStore";
 
 const TabLayout = () => {
-  const { currentSong } = useAudioStore();
-
   return (
     <SafeAreaProvider>
       <View className="flex-1">
@@ -24,7 +21,7 @@ const TabLayout = () => {
               borderTopWidth: 1,
               paddingBottom: 8,
               paddingTop: 8,
-              height: 83,
+              height: 80,
             },
             tabBarActiveTintColor: "#ec4899", // pink for active tab
             tabBarInactiveTintColor: "#6b7280", // gray for inactive tabs
