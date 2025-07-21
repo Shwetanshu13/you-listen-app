@@ -37,3 +37,10 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# Generated native folders - keep structure but ignore build artifacts
+android/app/build/
+android/.gradle/
+android/build/
+ios/build/
+*.xcworkspace
+*.xcuserdata
