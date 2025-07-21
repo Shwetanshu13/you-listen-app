@@ -2,6 +2,7 @@ import { View, Text } from "react-native";
 import React from "react";
 import { Tabs } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Home, User, Library, Settings } from "lucide-react-native";
 import { AudioPlayerWrapper } from "@/components";
 import { useAudioStore } from "@/stores/useAudioStore";
 
@@ -10,7 +11,7 @@ const TabLayout = () => {
 
   return (
     <SafeAreaProvider>
-      <View className="flex-1" style={{ paddingBottom: currentSong ? 140 : 0 }}>
+      <View className="flex-1">
         <Tabs
           screenOptions={{
             tabBarStyle: {
@@ -19,9 +20,14 @@ const TabLayout = () => {
               left: 0,
               right: 0,
               backgroundColor: "#171717", // neutral-900
-              borderTopColor: "#404040",
+              borderTopColor: "#ec4899", // pink border
               borderTopWidth: 1,
+              paddingBottom: 8,
+              paddingTop: 8,
+              height: 83,
             },
+            tabBarActiveTintColor: "#ec4899", // pink for active tab
+            tabBarInactiveTintColor: "#6b7280", // gray for inactive tabs
           }}
         >
           <Tabs.Screen
@@ -29,7 +35,7 @@ const TabLayout = () => {
             options={{
               title: "Home",
               headerShown: false,
-              tabBarIcon: () => <Text>🏠</Text>,
+              tabBarIcon: ({ color }) => <Home size={24} color={color} />,
             }}
           />
           <Tabs.Screen
@@ -37,7 +43,7 @@ const TabLayout = () => {
             options={{
               title: "Profile",
               headerShown: false,
-              tabBarIcon: () => <Text>👤</Text>,
+              tabBarIcon: ({ color }) => <User size={24} color={color} />,
             }}
           />
           <Tabs.Screen
@@ -45,15 +51,7 @@ const TabLayout = () => {
             options={{
               title: "Library",
               headerShown: false,
-              tabBarIcon: () => <Text>📚</Text>,
-            }}
-          />
-          <Tabs.Screen
-            name="settings"
-            options={{
-              title: "Settings",
-              headerShown: false,
-              tabBarIcon: () => <Text>⚙️</Text>,
+              tabBarIcon: ({ color }) => <Library size={24} color={color} />,
             }}
           />
         </Tabs>

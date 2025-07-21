@@ -3,8 +3,7 @@ import { View, Text, Pressable, AppState, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Slider from "@react-native-community/slider";
 import { Audio, AVPlaybackStatus } from "expo-av";
-import * as FileSystem from "expo-file-system";
-import { Pause, Play, Volume2, Download } from "lucide-react-native";
+import { Pause, Play, Volume2 } from "lucide-react-native";
 import { useAudioStore } from "@/stores/useAudioStore";
 
 export default function AudioPlayer() {
@@ -18,7 +17,6 @@ export default function AudioPlayer() {
   const [volume, setVolume] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
-  const [isCached, setIsCached] = useState(false);
 
   // Configure audio for background playback
   useEffect(() => {
@@ -54,54 +52,6 @@ export default function AudioPlayer() {
     return () => subscription?.remove();
   }, []);
 
-  // Get cached file path
-  const getCachedFilePath = (songId: number) => {
-    return `${FileSystem.cacheDirectory}song_${songId}.mp3`;
-  };
-
-  // Check if file is cached
-  const checkIfCached = async (songId: number) => {
-    try {
-      const cachedPath = getCachedFilePath(songId);
-      const fileInfo = await FileSystem.getInfoAsync(cachedPath);
-      return fileInfo.exists;
-    } catch {
-      return false;
-    }
-  };
-
-  // Download and cache the song
-  const downloadAndCache = async (fileUrl: string, songId: number) => {
-    try {
-      const cachedPath = getCachedFilePath(songId);
-      setIsLoading(true);
-
-      const download = FileSystem.createDownloadResumable(
-        fileUrl,
-        cachedPath,
-        {},
-        (downloadProgress) => {
-          // You can show download progress here if needed
-          const progress =
-            downloadProgress.totalBytesWritten /
-            downloadProgress.totalBytesExpectedToWrite;
-          console.log(`Download progress: ${Math.round(progress * 100)}%`);
-        }
-      );
-
-      const result = await download.downloadAsync();
-      if (result) {
-        setIsCached(true);
-        return result.uri;
-      }
-    } catch (error) {
-      console.error("Failed to cache song:", error);
-    } finally {
-      setIsLoading(false);
-    }
-    return fileUrl; // Fallback to streaming
-  };
-
   // Load and play audio
   useEffect(() => {
     if (!currentSong) return;
@@ -117,22 +67,8 @@ export default function AudioPlayer() {
           soundRef.current = null;
         }
 
-        // Check if song is cached
-        const cached = await checkIfCached(currentSong.id);
-        setIsCached(cached);
-
-        let sourceUri = currentSong.fileUrl;
-
-        // Use cached version if available, otherwise cache it
-        if (cached) {
-          sourceUri = getCachedFilePath(currentSong.id);
-        } else {
-          // Start downloading in background for next time
-          downloadAndCache(currentSong.fileUrl, currentSong.id);
-        }
-
         const { sound } = await Audio.Sound.createAsync(
-          { uri: sourceUri },
+          { uri: currentSong.fileUrl },
           {
             shouldPlay: false,
             volume: volume,
@@ -231,24 +167,6 @@ export default function AudioPlayer() {
     }
   };
 
-  const handleCacheToggle = async () => {
-    if (!currentSong) return;
-
-    if (isCached) {
-      // Remove from cache
-      try {
-        const cachedPath = getCachedFilePath(currentSong.id);
-        await FileSystem.deleteAsync(cachedPath);
-        setIsCached(false);
-      } catch (error) {
-        console.error("Failed to remove from cache:", error);
-      }
-    } else {
-      // Cache the song
-      await downloadAndCache(currentSong.fileUrl, currentSong.id);
-    }
-  };
-
   if (!currentSong) return null;
 
   return (
@@ -274,15 +192,6 @@ export default function AudioPlayer() {
             </Text>
           )}
         </View>
-
-        {/* Cache button */}
-        <Pressable onPress={handleCacheToggle} className="ml-2 p-2">
-          <Download
-            size={20}
-            color={isCached ? "#22c55e" : "#6b7280"}
-            fill={isCached ? "#22c55e" : "none"}
-          />
-        </Pressable>
       </View>
 
       {/* Controls */}
