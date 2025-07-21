@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -53,9 +53,12 @@ export default function AudioPage() {
     duration,
     progress,
     seekTo,
+    isLoading,
   } = useAudioStore();
   const { appUser } = useAuthStore();
   const [songDetails, setSongDetails] = useState<SongDetails | null>(null);
+  const [isSeeking, setIsSeeking] = useState(false);
+  const seekTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Check authentication
   useEffect(() => {
@@ -105,7 +108,7 @@ export default function AudioPage() {
         const response = await axiosInstance.get(
           `/songs/${currentSong.id}/getDetail`
         );
-        console.log("Fetched song details:", response.data);
+        // console.log("Fetched song details:", response.data);
         const { id, title, artist, duration } = response.data;
         setSongDetails({
           id,
@@ -128,6 +131,15 @@ export default function AudioPage() {
     fetchSongDetails();
   }, [currentSong]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (seekTimeoutRef.current) {
+        clearTimeout(seekTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60)
@@ -137,9 +149,8 @@ export default function AudioPage() {
   };
 
   const handleSeek = (value: number) => {
-    if (!duration) return;
-    const newTimeSeconds = (value / 100) * duration;
-    seekTo(newTimeSeconds);
+    // This is called during dragging - we don't seek here to avoid conflicts
+    // Actual seeking happens in onSlidingComplete
   };
 
   // Don't render if not authenticated or no song
@@ -175,7 +186,7 @@ export default function AudioPage() {
                 className="flex-row justify-between items-center px-6 py-4"
               >
                 <Pressable
-                  onPress={() => router.back()}
+                  onPress={() => router.dismiss()}
                   className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-xl items-center justify-center"
                 >
                   <ChevronDown size={24} color="white" />
@@ -228,8 +239,19 @@ export default function AudioPage() {
                 className="px-8 py-4"
               >
                 <Slider
-                  value={progress || 0}
+                  value={isSeeking ? undefined : progress || 0}
                   onValueChange={handleSeek}
+                  onSlidingStart={() => setIsSeeking(true)}
+                  onSlidingComplete={(value) => {
+                    if (!duration || isLoading) {
+                      setIsSeeking(false);
+                      return;
+                    }
+                    const newTimeSeconds = (value / 100) * duration;
+                    seekTo(newTimeSeconds);
+                    setIsSeeking(false);
+                  }}
+                  disabled={isLoading}
                   minimumValue={0}
                   maximumValue={100}
                   minimumTrackTintColor="#ec4899"
@@ -240,10 +262,10 @@ export default function AudioPage() {
 
                 <View className="flex-row justify-between mt-2">
                   <Text className="text-white/60 text-sm">
-                    {formatTime(currentTime || 0)}
+                    {isLoading ? "Loading..." : formatTime(currentTime || 0)}
                   </Text>
                   <Text className="text-white/60 text-sm">
-                    {formatTime(duration || 0)}
+                    {isLoading ? "Loading..." : formatTime(duration || 0)}
                   </Text>
                 </View>
               </Animated.View>

@@ -21,6 +21,8 @@ export default function AudioPlayer() {
     progress,
     seekToPosition,
     clearSeek,
+    isLoading,
+    setIsLoading,
   } = useAudioStore();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -67,6 +69,8 @@ export default function AudioPlayer() {
 
     const loadAndPlay = async () => {
       try {
+        setIsLoading(true);
+
         // Unload previous sound
         if (soundRef.current) {
           await soundRef.current.unloadAsync();
@@ -96,6 +100,7 @@ export default function AudioPlayer() {
           }
 
           isLoadedRef.current = true;
+          setIsLoading(false); // Audio is now loaded and ready
 
           const currentTimeSeconds = status.positionMillis / 1000;
           const durationSeconds = status.durationMillis
@@ -108,7 +113,6 @@ export default function AudioPlayer() {
           setCurrentTime(currentTimeSeconds);
           setDuration(durationSeconds);
           setProgress(progressPercent);
-          setProgress(progressPercent);
 
           // Auto-play next song when current ends
           if (status.didJustFinish) {
@@ -116,11 +120,15 @@ export default function AudioPlayer() {
           }
         });
 
+        // Auto-play after loading (only if user intended to play)
         if (isPlaying) {
           await sound.playAsync();
         }
+
+        setIsLoading(false); // Ensure loading state is cleared
       } catch (error) {
         console.error("Failed to load audio:", error);
+        setIsLoading(false); // Clear loading state on error
         Alert.alert("Error", "Failed to load audio. Please try again.");
       }
     };
@@ -134,21 +142,27 @@ export default function AudioPlayer() {
 
   // Handle seeking
   useEffect(() => {
-    if (!soundRef.current || !isLoadedRef.current || seekToPosition === null)
+    if (
+      !soundRef.current ||
+      !isLoadedRef.current ||
+      seekToPosition === null ||
+      isLoading
+    )
       return;
 
     const performSeek = async () => {
       try {
-        const positionMillis = seekToPosition * 1000; // Convert to milliseconds
+        const positionMillis = Math.max(0, seekToPosition * 1000); // Ensure positive value
         await soundRef.current!.setPositionAsync(positionMillis);
         clearSeek();
       } catch (error) {
         console.error("Seek error:", error);
+        clearSeek(); // Clear even on error to prevent stuck state
       }
     };
 
     performSeek();
-  }, [seekToPosition, clearSeek]);
+  }, [seekToPosition, clearSeek, isLoading]);
 
   // Handle play/pause
   useEffect(() => {

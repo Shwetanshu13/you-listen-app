@@ -14,6 +14,7 @@ export const useAudioStore = create<{
   duration: number;
   progress: number;
   seekToPosition: number | null;
+  isLoading: boolean;
   setCurrentSong: (song: {
     id: number;
     title: string;
@@ -27,6 +28,7 @@ export const useAudioStore = create<{
   setProgress: (progress: number) => void;
   seekTo: (position: number) => void;
   clearSeek: () => void;
+  setIsLoading: (loading: boolean) => void;
 }>((set) => ({
   currentSong: null,
   isPlaying: false,
@@ -34,11 +36,20 @@ export const useAudioStore = create<{
   duration: 0,
   progress: 0,
   seekToPosition: null,
-  setCurrentSong: (song) => set({ currentSong: song, isPlaying: true }),
+  isLoading: false,
+  setCurrentSong: (song) =>
+    set({
+      currentSong: song,
+      isLoading: true,
+      currentTime: 0,
+      duration: 0,
+      progress: 0,
+    }),
   setIsPlaying: (playing) => set({ isPlaying: playing }),
   setCurrentTime: (time) => set({ currentTime: time }),
   setDuration: (duration) => set({ duration: duration }),
   setProgress: (progress) => set({ progress: progress }),
   seekTo: (position) => set({ seekToPosition: position }),
   clearSeek: () => set({ seekToPosition: null }),
+  setIsLoading: (loading) => set({ isLoading: loading }),
 }));

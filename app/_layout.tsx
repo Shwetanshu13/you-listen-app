@@ -13,7 +13,7 @@ export default function RootLayout() {
     const fetchUser = async () => {
       try {
         const response = await axiosInstance.get("/auth/me");
-        console.log(response.data);
+        // console.log(response.data);
         if (response.status !== 200) {
           console.log("User not authenticated");
           return;
