@@ -48,6 +48,8 @@ export default function RootLayout() {
               presentation: "modal",
               gestureEnabled: true,
               gestureDirection: "vertical",
+              animationTypeForReplace: "push",
+              animation: "slide_from_bottom",
             }}
           />
         </Stack.Protected>

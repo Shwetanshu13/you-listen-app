@@ -19,10 +19,13 @@ export default function AudioPlayer() {
     currentTime,
     duration,
     progress,
+    seekToPosition,
+    clearSeek,
   } = useAudioStore();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const soundRef = useRef<Audio.Sound | null>(null);
+  const isLoadedRef = useRef(false);
 
   // Configure audio for background playback
   useEffect(() => {
@@ -68,6 +71,7 @@ export default function AudioPlayer() {
         if (soundRef.current) {
           await soundRef.current.unloadAsync();
           soundRef.current = null;
+          isLoadedRef.current = false;
         }
 
         const { sound } = await Audio.Sound.createAsync(
@@ -86,7 +90,12 @@ export default function AudioPlayer() {
 
         // Set up playback status listener
         sound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
-          if (!status.isLoaded) return;
+          if (!status.isLoaded) {
+            isLoadedRef.current = false;
+            return;
+          }
+
+          isLoadedRef.current = true;
 
           const currentTimeSeconds = status.positionMillis / 1000;
           const durationSeconds = status.durationMillis
@@ -123,9 +132,27 @@ export default function AudioPlayer() {
     };
   }, [currentSong]);
 
+  // Handle seeking
+  useEffect(() => {
+    if (!soundRef.current || !isLoadedRef.current || seekToPosition === null)
+      return;
+
+    const performSeek = async () => {
+      try {
+        const positionMillis = seekToPosition * 1000; // Convert to milliseconds
+        await soundRef.current!.setPositionAsync(positionMillis);
+        clearSeek();
+      } catch (error) {
+        console.error("Seek error:", error);
+      }
+    };
+
+    performSeek();
+  }, [seekToPosition, clearSeek]);
+
   // Handle play/pause
   useEffect(() => {
-    if (!soundRef.current) return;
+    if (!soundRef.current || !isLoadedRef.current) return;
 
     const updatePlayback = async () => {
       try {
@@ -173,7 +200,7 @@ export default function AudioPlayer() {
             className="h-full bg-white rounded-t-2xl"
             style={{ width: `${progress}%` }}
           />
-        </View>{" "}
+        </View>
         <Pressable
           onPress={() => router.push("/audio-page")}
           className="flex-row items-center space-x-4"
@@ -187,7 +214,7 @@ export default function AudioPlayer() {
           </Animated.View>
 
           {/* Song Info */}
-          <Animated.View entering={FadeInUp.delay(300)} className="flex-1">
+          <Animated.View entering={FadeInUp.delay(300)} className="flex-1 mx-4">
             <Text className="text-white font-bold text-base truncate">
               {currentSong.title}
             </Text>
