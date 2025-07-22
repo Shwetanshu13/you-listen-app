@@ -2,7 +2,7 @@ import { View, Text } from "react-native";
 import React from "react";
 import { Tabs } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { Home, User, Library, Settings } from "lucide-react-native";
+import { Home, User, Library, Music, ListMusic } from "lucide-react-native";
 import { AudioPlayerWrapper } from "@/components";
 
 const TabLayout = () => {
@@ -36,19 +36,27 @@ const TabLayout = () => {
             }}
           />
           <Tabs.Screen
-            name="profile"
-            options={{
-              title: "Profile",
-              headerShown: false,
-              tabBarIcon: ({ color }) => <User size={24} color={color} />,
-            }}
-          />
-          <Tabs.Screen
             name="library"
             options={{
               title: "Library",
               headerShown: false,
               tabBarIcon: ({ color }) => <Library size={24} color={color} />,
+            }}
+          />
+          <Tabs.Screen
+            name="playlists"
+            options={{
+              title: "Playlists",
+              headerShown: false,
+              tabBarIcon: ({ color }) => <ListMusic size={24} color={color} />,
+            }}
+          />
+          <Tabs.Screen
+            name="profile"
+            options={{
+              title: "Profile",
+              headerShown: false,
+              tabBarIcon: ({ color }) => <User size={24} color={color} />,
             }}
           />
         </Tabs>

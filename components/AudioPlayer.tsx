@@ -24,6 +24,7 @@ export default function AudioPlayer() {
     isLoading,
     setIsLoading,
   } = useAudioStore();
+
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const soundRef = useRef<Audio.Sound | null>(null);
@@ -256,7 +257,9 @@ export default function AudioPlayer() {
               }}
               className="w-12 h-12 rounded-full bg-white/25 backdrop-blur-xl items-center justify-center shadow-lg"
             >
-              {isPlaying ? (
+              {isLoading ? (
+                <View className="w-3 h-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
+              ) : isPlaying ? (
                 <Pause size={20} color="white" />
               ) : (
                 <Play size={20} color="white" style={{ marginLeft: 2 }} />

@@ -16,6 +16,8 @@ type SongCardProps = {
   artist: string;
   duration: string;
   fileUrl: string;
+  showRemove?: boolean;
+  onRemove?: () => void;
 };
 
 export default function SongCard({
@@ -24,6 +26,8 @@ export default function SongCard({
   artist,
   duration,
   fileUrl,
+  showRemove,
+  onRemove,
 }: SongCardProps) {
   const { currentSong, isPlaying, setCurrentSong, setIsPlaying } =
     useAudioStore();
@@ -71,6 +75,8 @@ export default function SongCard({
                   duration={duration}
                   isPlaying={isPlaying}
                   isCurrent={isCurrent}
+                  showRemove={showRemove}
+                  onRemove={onRemove}
                 />
               </View>
             </View>
@@ -97,6 +103,8 @@ export default function SongCard({
                   duration={duration}
                   isPlaying={isPlaying}
                   isCurrent={isCurrent}
+                  showRemove={showRemove}
+                  onRemove={onRemove}
                 />
               </View>
             </LinearGradient>
