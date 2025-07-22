@@ -12,6 +12,9 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://you-listen-backend.onrender.com"
+      },
+      "android": {
+        "buildType": "apk"
       }
     },
     "production": {
